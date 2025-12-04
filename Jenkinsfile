@@ -94,15 +94,23 @@ pipeline {
 
         stage("Deploy-UAT"){
             steps {
-
-                echo "Deploying....UAT Servers..."
+                sshagent(['jenkins-aws-ssh-creds']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ubuntu@43.204.211.49 "echo 'SSH Connection Successful from Jenkins!'"
+                        scp -o StrictHostKeyChecking=no /var/jenkins_home/workspace/Food-Order/Food-Order-System/food_order/dist/anagrams.jar ubuntu@43.204.211.49:/home/ubuntu
+                    '''
+                }
             }
         }
 
         stage("Deploy-PROD"){
             steps {
-
-                echo "Deploying....PROD Servers..."
+                sshagent(['jenkins-aws-ssh-creds']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ubuntu@13.200.235.238 "echo 'SSH Connection Successful from Jenkins!'"
+                        scp -o StrictHostKeyChecking=no /var/jenkins_home/workspace/Food-Order/Food-Order-System/food_order/dist/anagrams.jar ubuntu@13.200.235.238:/home/ubuntu
+                    '''
+                }
             }
         }
 
