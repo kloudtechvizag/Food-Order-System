@@ -87,9 +87,9 @@ pipeline {
         stage("Deploy-Dev"){
             steps {
                 sshagent(['jenkins-aws-ssh-creds']) {
-                    sh '''
-                        scp -o StrictHostKeyChecking=no \${jarFileName} ubuntu@65.0.251.218:/home/ubuntu
-                    '''
+                    sh """
+                        scp -o StrictHostKeyChecking=no ${jarFileName} ubuntu@65.0.251.218:/home/ubuntu
+                    """
                 }
             }
         }
@@ -97,9 +97,9 @@ pipeline {
         stage("Deploy-UAT"){
             steps {
                 sshagent(['jenkins-aws-ssh-creds']) {
-                    sh '''
-                        scp -o StrictHostKeyChecking=no \${jarFileName} ubuntu@43.204.211.49:/home/ubuntu
-                    '''
+                    sh """
+                        scp -o StrictHostKeyChecking=no ${jarFileName} ubuntu@43.204.211.49:/home/ubuntu
+                    """
                 }
             }
         }
@@ -107,9 +107,9 @@ pipeline {
         stage("Deploy-PROD"){
             steps {
                 sshagent(['jenkins-aws-ssh-creds']) {
-                    sh '''
-                        scp -o StrictHostKeyChecking=no \${jarFileName} ubuntu@13.200.235.238:/home/ubuntu
-                    '''
+                    sh """
+                        scp -o StrictHostKeyChecking=no ${jarFileName} ubuntu@13.200.235.238:/home/ubuntu
+                    """
                 }
             }
         }
