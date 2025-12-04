@@ -86,6 +86,7 @@ pipeline {
                 sshagent(['jenkins-aws-ssh-creds']) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no ubuntu@65.0.251.218 "echo 'SSH Connection Successful from Jenkins!'"
+                        scp -o StrictHostKeyChecking=no /var/jenkins_home/workspace/Food-Order/Food-Order-System/food_order/dist/anagrams.jar ubuntu@65.0.251.218:/home/ubuntu
                     '''
                 }
             }
