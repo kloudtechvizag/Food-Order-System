@@ -21,15 +21,17 @@ pipeline {
         }
 
         stage('Sonar-Scanning') {
-    withSonarQubeEnv('dev-01') {
-        sh '''
-            cd food_order
-            sonar-scanner \
-              -Dsonar.projectKey=Food-Order-System \
-              -Dsonar.projectName=Food-Order-System \
-              -Dsonar.sources=. \
-              -Dsonar.sourceEncoding=UTF-8
-        '''
+            steps {
+             withSonarQubeEnv('dev-01') {
+                     sh '''
+                     cd food_order
+                     sonar-scanner \
+                     -Dsonar.projectKey=Food-Order-System \
+                     -Dsonar.projectName=Food-Order-System \
+                     -Dsonar.sources=. \
+                      -Dsonar.sourceEncoding=UTF-8
+              '''
+        }
     }
 }
         stage("Sonar Quality Gate") {
