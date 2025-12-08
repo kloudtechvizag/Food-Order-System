@@ -20,20 +20,24 @@ pipeline {
             }
         }
 
-        stage('Sonar-Scanning') {
+        stage("Sonar-Scanning"){
             steps {
-             withSonarQubeEnv('dev-01') {
-                     sh '''
-                     cd food_order
-                     sonar-scanner \
-                     -Dsonar.projectKey=Food-Order-System \
-                     -Dsonar.projectName=Food-Order-System \
-                     -Dsonar.sources=. \
-                      -Dsonar.sourceEncoding=UTF-8
-              '''
+               
+               script {
+                    withSonarQubeEnv( installationName: 'dev-sonar-01', credentialsId: 'jenkins-sonar-creds') {
+                        sh """
+                            cd food_order
+                            sonar-scanner \
+                                        -Dsonar.projectKey=Food-Order-System \
+                                        -Dsonar.projectName=Food-Order-System \
+                                        -Dsonar.sources=. \
+                                        -Dsonar.sourceEncoding=UTF-8
+                        """
+                    }
+               }
+            }
         }
-    }
-}
+
         stage("Sonar Quality Gate") {
             steps {
                 script {
