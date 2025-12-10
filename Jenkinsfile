@@ -48,38 +48,40 @@ pipeline {
             }
         }
 
-        stage("Upload-Artifacts-Nexus"){
-            steps {
+        stage("Upload-Artifacts-Nexus") {
+    steps {
+        script {
+            def snapshotVersion = "1.0.0-${env.BUILD_NUMBER}-SNAPSHOT"
+            def jarPath = "${env.WORKSPACE}/food_order/dist/anagrams.jar"
 
-                script {
-                    def snapshotVersion = "1.0.0-${env.BUILD_NUMBER}-SNAPSHOT"
-                    env.JAR_FILE_PATH = "${env.WORKSPACE}/food_order/dist/anagrams.jar"
-                    echo "Uploading version: ${snapshotVersion}"
+            echo "Uploading SNAPSHOT version: ${snapshotVersion}"
+            echo "Jar file path: ${jarPath}"
 
-                    echo "Printing Jarfile Path: ${env.JAR_FILE_PATH}"
-
-                    nexusArtifactUploader(
-                        nexusVersion: 'nexus3',
-                        protocol: 'http',
-                        nexusUrl: 'nexus:8081',
-                        groupId: 'com.example',
-                        version: snapshotVersion,
-                        repository: 'maven-snapshots',
-                        credentialsId: 'nexus-creds',
-                        artifacts: [
-                            [
-                                artifactId: 'anagrams',
-                                file: env.JAR_FILE_PATH,
-                                type: "jar",
-                                classifier: ""
-                            ]
-                        ]
-                    )
-
-                }
-
+            if (!fileExists(jarPath)) {
+                error "JAR file not found at ${jarPath}"
             }
+
+            nexusArtifactUploader(
+                nexusVersion: 'nexus3',
+                protocol: 'http',
+                nexusUrl: 'nexus:8081',   // ✅ Docker container name
+                groupId: 'com.example',
+                version: snapshotVersion,
+                repository: 'maven-snapshots',
+                credentialsId: 'nexus-creds',
+                artifacts: [
+                    [
+                        artifactId: 'anagrams',
+                        file: jarPath,
+                        type: 'jar'
+                    ]
+                ],
+                failOnError: true
+            )
         }
+    }
+}
+
 
         stage("Deploy-Dev"){
             steps {
