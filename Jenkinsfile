@@ -1,8 +1,16 @@
 pipeline {
-    agent any 
-    stages{
+    agent any
 
-        stage("BuildCode"){
+    environment {
+        NEXUS_URL = "http://nexus:8081"
+        NEXUS_REPO = "maven-snapshots"
+        NEXUS_GROUP = "com/example"
+        ARTIFACT_ID = "anagrams"
+    }
+
+    stages {
+
+        stage("BuildCode") {
             steps {
                 sh """
                     cd food_order
@@ -11,7 +19,7 @@ pipeline {
             }
         }
 
-        stage("Run-Unit-Tests"){
+        stage("Run-Unit-Tests") {
             steps {
                 sh """
                     cd food_order
@@ -20,20 +28,20 @@ pipeline {
             }
         }
 
-       stage('Sonar-Scanning') {
-    steps {
-        withSonarQubeEnv('sonarqube') {
-            sh """
-              cd food_order
-              ${tool 'SonarScanner'}/bin/sonar-scanner \
-              -Dsonar.projectKey=Food-Order-System \
-              -Dsonar.projectName=Food-Order-System \
-              -Dsonar.sources=. \
-              -Dsonar.sourceEncoding=UTF-8
-            """
+        stage("Sonar-Scanning") {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh """
+                      cd food_order
+                      ${tool 'SonarScanner'}/bin/sonar-scanner \
+                      -Dsonar.projectKey=Food-Order-System \
+                      -Dsonar.projectName=Food-Order-System \
+                      -Dsonar.sources=. \
+                      -Dsonar.sourceEncoding=UTF-8
+                    """
+                }
+            }
         }
-    }
-}
 
         stage("Sonar Quality Gate") {
             steps {
@@ -49,40 +57,35 @@ pipeline {
         }
 
         stage("Upload-Artifacts-Nexus") {
-    steps {
-        script {
-            def snapshotVersion = "1.0.0-${env.BUILD_NUMBER}-SNAPSHOT"
-            def jarPath = "${env.WORKSPACE}/food_order/dist/anagrams.jar"
+            steps {
+                script {
+                    def snapshotVersion = "1.0.0-${env.BUILD_NUMBER}-SNAPSHOT"
+                    def jarPath = "${env.WORKSPACE}/food_order/dist/anagrams.jar"
 
-            echo "Uploading SNAPSHOT version: ${snapshotVersion}"
-            echo "Jar file path: ${jarPath}"
+                    echo "Uploading SNAPSHOT version: ${snapshotVersion}"
+                    echo "Jar file path: ${jarPath}"
 
-            if (!fileExists(jarPath)) {
-                error "JAR file not found at ${jarPath}"
+                    if (!fileExists(jarPath)) {
+                        error "JAR file not found at ${jarPath}"
+                    }
+
+                    // Upload path to Nexus  
+                    def nexusUploadPath = "${NEXUS_URL}/repository/${NEXUS_REPO}/${NEXUS_GROUP}/${ARTIFACT_ID}/${snapshotVersion}"
+
+                    echo "Uploading to Nexus URL: ${nexusUploadPath}"
+
+                    sh """
+                        curl -v -u admin:Janu@psycho12 \
+                        --upload-file ${jarPath} \
+                        ${nexusUploadPath}/${ARTIFACT_ID}-${snapshotVersion}.jar
+                    """
+
+                    env.JAR_FILE_PATH = "${jarPath}"
+                }
             }
-
-            nexusArtifactUploader(
-                nexusVersion: 'nexus3',
-                protocol: 'http',
-                nexusUrl: 'nexus:8081',   // ✅ Docker container name
-                groupId: 'com.example',
-                version: snapshotVersion,
-                repository: 'maven-snapshots',
-                credentialsId: 'nexus-creds',
-                artifacts: [
-                    [
-                        artifactId: 'anagrams',
-                        file: jarPath,
-                        type: 'jar'
-                    ]
-                ]
-            )
         }
-    }
-}
 
-
-        stage("Deploy-Dev"){
+        stage("Deploy-Dev") {
             steps {
                 sshagent(['jenkins-aws-ssh-creds']) {
                     sh """
@@ -92,7 +95,7 @@ pipeline {
             }
         }
 
-        stage("Deploy-UAT"){
+        stage("Deploy-UAT") {
             steps {
                 sshagent(['jenkins-aws-ssh-creds']) {
                     sh """
@@ -102,7 +105,7 @@ pipeline {
             }
         }
 
-        stage("Deploy-PROD"){
+        stage("Deploy-PROD") {
             steps {
                 sshagent(['jenkins-aws-ssh-creds']) {
                     sh """
@@ -111,10 +114,5 @@ pipeline {
                 }
             }
         }
-
-
-
-
-
     }
 }
